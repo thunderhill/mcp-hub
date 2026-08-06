@@ -1,0 +1,24 @@
+services:
+  - name: minislack
+    namespace: slack
+    type: socketio
+    base_url: http://minislack:5000
+    timeout: 5
+    retries: 2
+    enabled: true
+
+  - name: observability
+    namespace: obs
+    type: rest
+    base_url: http://observability:3000
+    timeout: 5
+    retries: 2
+    enabled: false  # Grafana not responding yet; enable when Prometheus/Loki are up
+
+  - name: rag
+    namespace: rag
+    type: openapi
+    base_url: http://127.0.0.1:9003
+    timeout: 5
+    retries: 2
+    enabled: false  # No RAG service available yet
