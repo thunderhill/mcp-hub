@@ -1,16 +1,108 @@
+# Service topology. Addresses come from the environment so this file can be
+# committed and still describe a four-laptop deployment — ${VAR:-default}.
+#
+# The five marketing channels are one connector class over five namespaces.
+# Each holds its OWN MiniSlack agent token, because MiniSlack rate-limits per
+# token and a five-channel fan-out on a shared token trips 429s partway
+# through. Limits and costs are carried here so `<ns>.status` can report them;
+# they are NOT enforced — TORQUE's compliance engine holds sole blocking
+# authority.
+
 services:
+  - name: channel_email
+    connector: channel
+    namespace: email
+    type: rest
+    base_url: ${MINISLACK_URL:-http://127.0.0.1:5000}
+    timeout: 10
+    retries: 2
+    enabled: true
+    options:
+      channel: email
+      outbox: email-outbox
+      token_env: MINISLACK_TOKEN_EMAIL
+      rulebook: can_spam
+      max_body_chars: 8000
+      cost_per_message_inr: 0.02
+
+  - name: channel_whatsapp
+    connector: channel
+    namespace: whatsapp
+    type: rest
+    base_url: ${MINISLACK_URL:-http://127.0.0.1:5000}
+    timeout: 10
+    retries: 2
+    enabled: true
+    options:
+      channel: whatsapp
+      outbox: whatsapp-outbox
+      token_env: MINISLACK_TOKEN_WHATSAPP
+      rulebook: whatsapp_business
+      max_body_chars: 1024
+      cost_per_message_inr: 0.8631
+
+  - name: channel_sms
+    connector: channel
+    namespace: sms
+    type: rest
+    base_url: ${MINISLACK_URL:-http://127.0.0.1:5000}
+    timeout: 10
+    retries: 2
+    enabled: true
+    options:
+      channel: sms
+      outbox: sms-outbox
+      token_env: MINISLACK_TOKEN_SMS
+      rulebook: trai_dlt
+      max_body_chars: 160
+      cost_per_message_inr: 0.16
+
+  - name: channel_push
+    connector: channel
+    namespace: push
+    type: rest
+    base_url: ${MINISLACK_URL:-http://127.0.0.1:5000}
+    timeout: 10
+    retries: 2
+    enabled: true
+    options:
+      channel: push
+      outbox: push-outbox
+      token_env: MINISLACK_TOKEN_PUSH
+      rulebook: push_basic
+      max_body_chars: 180
+      cost_per_message_inr: 0.0
+
+  - name: channel_social
+    connector: channel
+    namespace: social
+    type: rest
+    base_url: ${MINISLACK_URL:-http://127.0.0.1:5000}
+    timeout: 10
+    retries: 2
+    enabled: true
+    options:
+      channel: social
+      outbox: social-outbox
+      token_env: MINISLACK_TOKEN_SOCIAL
+      rulebook: social_basic
+      max_body_chars: 2200
+      cost_per_message_inr: 0.0
+
+  # Operator-facing view of the whole workspace, not tied to one channel.
+  # Uses the ops token so its traffic does not eat a channel's rate budget.
   - name: minislack
     namespace: slack
-    type: socketio
-    base_url: http://minislack:5000
-    timeout: 5
+    type: rest
+    base_url: ${MINISLACK_URL:-http://127.0.0.1:5000}
+    timeout: 10
     retries: 2
     enabled: true
 
   - name: observability
     namespace: obs
     type: rest
-    base_url: http://observability:3000
+    base_url: ${OBSERVABILITY_URL:-http://127.0.0.1:3000}
     timeout: 5
     retries: 2
     enabled: false  # Grafana not responding yet; enable when Prometheus/Loki are up
@@ -18,7 +110,7 @@ services:
   - name: rag
     namespace: rag
     type: openapi
-    base_url: http://127.0.0.1:9003
+    base_url: ${RAG_URL:-http://127.0.0.1:9003}
     timeout: 5
     retries: 2
     enabled: false  # No RAG service available yet

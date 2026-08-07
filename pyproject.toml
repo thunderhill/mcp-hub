@@ -11,8 +11,11 @@ dependencies = [
     "structlog>=24.0.0",
     "uvicorn>=0.30.0",
     "starlette>=0.38.0",
-    "python-socketio[asyncio_client]>=5.11.0",
+    "python-dotenv>=1.0.0",
 ]
+# python-socketio was dropped with the Socket.IO slack transport. Agents
+# authenticate with a token against /api/v1; the socket path was MiniSlack's
+# human browser login.
 
 [project.optional-dependencies]
 dev = [
