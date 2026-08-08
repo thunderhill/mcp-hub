@@ -7,6 +7,8 @@ from typing import Any
 import httpx
 import structlog
 
+from src.core.metrics import UPSTREAM_CALL_DURATION, UPSTREAM_CALLS
+
 logger = structlog.get_logger()
 
 _clients: dict[str, httpx.AsyncClient] = {}
@@ -44,7 +46,10 @@ async def resilient_request(
         try:
             resp = await client.request(method, path, **kwargs)
             resp.raise_for_status()
-            latency = (time.monotonic() - start) * 1000
+            elapsed = time.monotonic() - start
+            latency = elapsed * 1000
+            UPSTREAM_CALLS.labels(upstream=upstream, method=method, outcome="success").inc()
+            UPSTREAM_CALL_DURATION.labels(upstream=upstream, method=method).observe(elapsed)
             await logger.ainfo(
                 "upstream_call",
                 upstream=upstream,
@@ -57,7 +62,10 @@ async def resilient_request(
             return resp
         except (httpx.HTTPStatusError, httpx.RequestError) as exc:
             last_exc = exc
-            latency = (time.monotonic() - start) * 1000
+            elapsed = time.monotonic() - start
+            latency = elapsed * 1000
+            UPSTREAM_CALLS.labels(upstream=upstream, method=method, outcome="error").inc()
+            UPSTREAM_CALL_DURATION.labels(upstream=upstream, method=method).observe(elapsed)
             await logger.awarning(
                 "upstream_call_failed",
                 upstream=upstream,

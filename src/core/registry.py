@@ -16,6 +16,7 @@ from src.connectors.channels import ChannelConnector
 from src.connectors.slack import SlackConnector
 from src.connectors.observability import ObservabilityConnector
 from src.connectors.rag import RagConnector
+from src.core.metrics import metrics_endpoint
 
 logger = structlog.get_logger()
 
@@ -71,6 +72,8 @@ async def build_hub(
     @hub.custom_route("/health", methods=["GET"])
     async def health_check(request: Request) -> JSONResponse:
         return JSONResponse({"status": "ok"})
+
+    hub.custom_route("/metrics", methods=["GET"])(metrics_endpoint)
 
     services = load_service_config(config_path)
 

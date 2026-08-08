@@ -39,6 +39,7 @@ import structlog
 from fastmcp import FastMCP
 
 from src.core.http_client import get_client, make_error, resilient_request
+from src.core.metrics import CHANNEL_SENDS
 
 logger = structlog.get_logger()
 
@@ -110,6 +111,7 @@ class ChannelConnector:
             without parsing message bodies.
             """
             if not connector.token:
+                CHANNEL_SENDS.labels(channel=connector.channel, outcome="failed").inc()
                 return make_error(
                     f"no agent token configured — set {connector.token_env}",
                     upstream="minislack",
@@ -126,6 +128,7 @@ class ChannelConnector:
                     json={"text": text},
                 )
             except httpx.HTTPStatusError as exc:
+                CHANNEL_SENDS.labels(channel=connector.channel, outcome="failed").inc()
                 status = exc.response.status_code
                 return make_error(
                     f"HTTP {status} from MiniSlack",
@@ -136,8 +139,10 @@ class ChannelConnector:
                     retryable=status == 429 or status >= 500,
                 )
             except Exception as exc:
+                CHANNEL_SENDS.labels(channel=connector.channel, outcome="failed").inc()
                 return make_error(str(exc)[:200], upstream="minislack")
 
+            CHANNEL_SENDS.labels(channel=connector.channel, outcome="ok").inc()
             body: dict[str, Any] = resp.json()
             message_id = str(body.get("message", {}).get("id", ""))
             await logger.ainfo(

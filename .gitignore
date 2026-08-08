@@ -5,3 +5,10 @@ __pycache__/
 dist/
 *.egg-info/
 .pytest_cache/
+
+# Prometheus/Grafana BINARIES live one level up, in note/observability/, and
+# are never inside this repo. This guards against someone accidentally
+# extracting or running them here instead - a Grafana install alone is ~350MB.
+observability/prometheus/
+observability/grafana/
+observability/*.zip

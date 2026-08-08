@@ -9,7 +9,9 @@ from starlette.responses import JSONResponse
 
 class BearerTokenMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.url.path == "/health":
+        # A Prometheus scrape target should not need a token that rotates
+        # independently of the scrape config, same reasoning as /health.
+        if request.url.path in ("/health", "/metrics"):
             return await call_next(request)
 
         token = os.environ.get("MCP_AUTH_TOKEN")

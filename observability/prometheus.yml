@@ -1,0 +1,31 @@
+# TORQUE platform scrape config.
+#
+# Three targets - one per FastAPI-based unit. MiniSlack (Flask+Socket.IO) is
+# not instrumented; it is external harvested code and its own delivery
+# outcomes are already visible through mcphub_channel_sends_total.
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: torque-api
+    static_configs:
+      - targets: ["127.0.0.1:8100"]
+        labels:
+          service: torque-api
+
+  - job_name: mcp-hub
+    static_configs:
+      - targets: ["127.0.0.1:8001"]
+        labels:
+          service: mcp-hub
+
+  - job_name: torque-simulator
+    static_configs:
+      - targets: ["127.0.0.1:8200"]
+        labels:
+          service: torque-simulator
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["127.0.0.1:9090"]

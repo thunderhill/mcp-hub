@@ -105,7 +105,7 @@ services:
     base_url: ${OBSERVABILITY_URL:-http://127.0.0.1:3000}
     timeout: 5
     retries: 2
-    enabled: false  # Grafana not responding yet; enable when Prometheus/Loki are up
+    enabled: true  # Prometheus + Grafana provisioned in observability/; see setup.ps1
 
   - name: rag
     namespace: rag

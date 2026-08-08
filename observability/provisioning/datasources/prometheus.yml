@@ -1,0 +1,20 @@
+# Grafana file-based provisioning — the datasource exists the moment Grafana
+# boots, with no click-through setup.
+#
+# `uid: prometheus` is pinned deliberately. Grafana's older numeric
+# datasource ids ("proxy/1/...") are assigned by insertion order and are
+# fragile — re-provisioning in a different order silently repoints every
+# dashboard and every API caller at the wrong datasource. The uid is stable
+# across reprovisioning, and it is exactly what mcp-hub's observability
+# connector targets (src/connectors/observability.py uses
+# /api/datasources/proxy/uid/prometheus/...).
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus
+    access: proxy
+    url: http://127.0.0.1:9090
+    isDefault: true
+    editable: true

@@ -1,0 +1,57 @@
+{
+  "title": "mcp-hub — Connectors",
+  "uid": "mcphub-overview",
+  "tags": ["torque", "mcp-hub"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "5s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Upstream calls / sec, by upstream and outcome",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(mcphub_upstream_calls_total[1m])) by (upstream, outcome)",
+          "legendFormat": "{{upstream}} — {{outcome}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "description": "Every connector funnels through resilient_request, so a new namespace is metered here with no extra wiring."
+    },
+    {
+      "id": 2,
+      "title": "Upstream p95 latency, by upstream",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum(rate(mcphub_upstream_call_duration_seconds_bucket[5m])) by (le, upstream))",
+          "legendFormat": "{{upstream}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
+    },
+    {
+      "id": 3,
+      "title": "Channel sends (5m), by channel and outcome",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(mcphub_channel_sends_total[5m])) by (channel, outcome)",
+          "legendFormat": "{{channel}} — {{outcome}}"
+        }
+      ],
+      "description": "Five namespaces, five tokens — each channel's traffic should be visible here independently."
+    }
+  ]
+}

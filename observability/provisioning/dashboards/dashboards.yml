@@ -1,0 +1,16 @@
+# Points Grafana at the dashboards folder so the JSON files load automatically
+# on boot — no import step, no manual upload.
+#
+# The path is RELATIVE, resolved against Grafana's working directory at
+# launch. launch.ps1 always starts grafana-server.exe from
+# mcp-hub/observability/, so this stays correct on any laptop the unit
+# migrates to — no machine-specific absolute path baked into committed config.
+apiVersion: 1
+
+providers:
+  - name: torque
+    folder: TORQUE
+    type: file
+    updateIntervalSeconds: 10
+    options:
+      path: dashboards

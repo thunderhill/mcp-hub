@@ -12,6 +12,7 @@ dependencies = [
     "uvicorn>=0.30.0",
     "starlette>=0.38.0",
     "python-dotenv>=1.0.0",
+    "prometheus-client>=0.20.0",
 ]
 # python-socketio was dropped with the Socket.IO slack transport. Agents
 # authenticate with a token against /api/v1; the socket path was MiniSlack's
