@@ -9,7 +9,7 @@ apiVersion: 1
 
 providers:
   - name: torque
-    folder: TORQUE
+    folder: Tata Campaign AI
     type: file
     updateIntervalSeconds: 10
     options:
