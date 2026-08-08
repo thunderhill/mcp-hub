@@ -59,6 +59,32 @@ $env:GF_ANALYTICS_REPORTING_ENABLED = "false"
 $env:GF_ANALYTICS_CHECK_FOR_UPDATES = "false"
 $env:GF_LOG_MODE = "console"
 
+# grafana.exe carries its own explicit Windows Firewall BLOCK rule, so the
+# only way it is LAN-reachable is proxied through the TORQUE API on :8100
+# (app/api/grafana_proxy.py), same trick as the Next.js dashboards. Grafana
+# has to be told it's served from a sub-path so it emits "/grafana/..."
+# asset and API links instead of root-relative ones.
+$env:GF_SERVER_ROOT_URL = "http://127.0.0.1:8100/grafana/"
+$env:GF_SERVER_SERVE_FROM_SUB_PATH = "true"
+# root_url's host is loopback (only the /grafana/ sub-path actually matters
+# for link generation), but real access is over the LAN IP through the
+# proxy. Grafana's [live] section governs this, not [security] - "origin not
+# allowed" comes from allowed_origins (GF_LIVE_ALLOWED_ORIGINS): "If not set
+# then origin will be matched over root_url", which only has ONE host baked
+# in, so every request whose Origin differs from root_url's 403s, including
+# plain REST API calls, not just the WebSocket "Live" feature the setting is
+# named for. There is no [security] csrf_trusted_origins in this version -
+# that name doesn't exist in defaults.ini and setting it is a silent no-op.
+#
+# Detected fresh at every launch, same reasoning as the rest of this project:
+# no LAN IP ever gets baked into a committed file, since DHCP can hand out a
+# new one.
+$lanIps = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+    Where-Object { $_.IPAddress -notlike "127.*" -and $_.IPAddress -notlike "169.254.*" }).IPAddress
+$origins = @("http://127.0.0.1:8100", "http://localhost:8100") + ($lanIps | ForEach-Object { "http://$_`:8100" })
+$env:GF_LIVE_ALLOWED_ORIGINS = ($origins -join ",")
+Write-Host "Grafana allowed origins: $($env:GF_LIVE_ALLOWED_ORIGINS)"
+
 Start-Process -FilePath $GrafExe -WorkingDirectory $RepoObs -WindowStyle Hidden `
     -ArgumentList @("server", "--homepath=$GrafHome")
 
