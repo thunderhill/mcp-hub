@@ -124,6 +124,38 @@
           "legendFormat": "{{event}}"
         }
       ]
+    },
+    {
+      "id": 9,
+      "title": "Simulator — runs / sec, by whether truth fell inside the CI",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(torque_simulator_runs_total[5m])) by (within_ci)",
+          "legendFormat": "within_ci={{within_ci}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "description": "within_ci=false on a healthy pipeline means the measurement drifted from the injected ground truth, not that the campaign failed."
+    },
+    {
+      "id": 10,
+      "title": "Simulator — p95 run duration",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum(rate(torque_simulator_run_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "description": "Wall-clock time to sample outcomes and compute lift for one campaign — the Analytics page's loading spinner, quantified."
     }
   ]
 }
